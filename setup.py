@@ -56,7 +56,7 @@ EXTRA_REQUIRE = {"tests": TESTS_REQUIRES}
 setup(
     name="deepsphere",
     version=find_version("deepsphere", "__init__.py"),
-    description="Deep Sphere package",
+    description="DeepSphere package (modernized for PyTorch 2.x)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Arcanite",
@@ -64,4 +64,5 @@ setup(
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRA_REQUIRE,
     packages=find_packages(),
+    python_requires=">=3.10",
 )

@@ -11,10 +11,23 @@ line_length = 150
 known_third_party = ['sklearn', 'ignite', 'pygsp']
 
 [build-system]
-build-backend = 'setuptools.build_meta'
 requires = [
-    "setuptools >= 40.0.4",
-    "setuptools_scm >= 2.0.0, <4",
-    "wheel >= 0.29.0",
+    "setuptools>=65",
+    "wheel>=0.40",
 ]
+build-backend = "setuptools.build_meta"
 
+[project]
+name = "deepsphere"
+version = "0.2.1-modern"
+description = "Modernized DeepSphere for PyTorch 2.x"
+authors = [{ name = "Carmen Embil Villagra" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "torch>=2.0",
+  "torchvision>=0.15",
+  "numpy>=1.22",
+  "scipy>=1.9",
+  "PyGSP>=0.5.1",
+]

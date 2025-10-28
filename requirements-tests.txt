@@ -1,7 +1,7 @@
-black==19.3b0
-isort[requirements,pyproject]==4.3.21
-pre-commit==1.18.3
-pylint==2.4.2
-pylint-fail-under==0.3.0
-Sphinx==2.2.0
-sphinx-rtd-theme==0.4.3
+black>=23.0
+isort>=5.12
+pre-commit>=3.3
+pylint>=3.0
+pylint-fail-under>=0.3.0
+Sphinx>=7.0
+sphinx-rtd-theme>=1.2
