@@ -19,7 +19,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepsphere"
-version = "0.2.1-modern"
+version = "0.2.2"
 description = "Modernized DeepSphere for PyTorch 2.x"
 authors = [{ name = "Carmen Embil Villagra" }]
 readme = "README.md"
