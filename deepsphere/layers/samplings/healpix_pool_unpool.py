@@ -35,12 +35,12 @@ class HealpixMaxPool(nn.MaxPool1d):
         """Forward call the 1d Maxpooling of pytorch
 
         Args:
-            x (:obj:`torch.tensor`):[batch x pixels x features]
+            x (:obj:`torch.tensor`):[batch x pixels x features] # CEV: features = channels.
 
         Returns:
             tuple((:obj:`torch.tensor`), indices (int)): [batch x pooled pixels x features] and indices of pooled pixels
         """
-        x = x.permute(0, 2, 1)
+        x = x.permute(0, 2, 1) # CEV: swaps the last two dimensions to fit pytorch 1d pooling input [batch x channels x pixels]
         if self.return_indices:
             x, indices = F.max_pool1d(x, self.kernel_size)
         else:

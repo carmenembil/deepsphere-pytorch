@@ -11,7 +11,7 @@ from deepsphere.layers.samplings.healpix_pool_unpool import Healpix
 from deepsphere.layers.samplings.icosahedron_pool_unpool import Icosahedron
 from deepsphere.models.spherical_unet.decoder import Decoder
 from deepsphere.models.spherical_unet.encoder import Encoder, EncoderTemporalConv
-from deepsphere.utils.laplacian_funcs import get_equiangular_laplacians, get_healpix_laplacians, get_icosahedron_laplacians
+from deepsphere.utils.laplacian_funcs import get_healpix_laplacians, get_icosahedron_laplacians #, get_equiangular_laplacians
 
 
 class SphericalUNet(nn.Module):
@@ -29,7 +29,7 @@ class SphericalUNet(nn.Module):
             ratio (float): Parameter for equiangular sampling
         """
         super().__init__()
-        self.ratio = ratio
+        self.ratio = ratio # CEV: for equilangular only
         self.kernel_size = kernel_size
         if pooling_class == "icosahedron":
             self.pooling_class = Icosahedron()
@@ -37,11 +37,11 @@ class SphericalUNet(nn.Module):
         elif pooling_class == "healpix":
             self.pooling_class = Healpix()
             self.laps = get_healpix_laplacians(N, depth, laplacian_type)
-        elif pooling_class == "equiangular":
-            self.pooling_class = Equiangular()
-            self.laps = get_equiangular_laplacians(N, depth, self.ratio, laplacian_type)
+        # elif pooling_class == "equiangular":
+        #     self.pooling_class = Equiangular()
+        #     self.laps = get_equiangular_laplacians(N, depth, self.ratio, laplacian_type)
         else:
-            raise ValueError("Error: sampling method unknown. Please use icosahedron, healpix or equiangular.")
+            raise ValueError("Error: sampling method unknown. Please use icosahedron or healpix.")
 
         self.encoder = Encoder(self.pooling_class.pooling, self.laps, self.kernel_size)
         self.decoder = Decoder(self.pooling_class.unpooling, self.laps, self.kernel_size)

@@ -4,8 +4,8 @@
 import numpy as np
 import torch
 from pygsp.graphs.nngraphs.spherehealpix import SphereHealpix
-from pygsp.graphs.nngraphs.sphereicosahedron import SphereIcosahedron
-from pygsp.graphs.sphereequiangular import SphereEquiangular
+from pygsp.graphs.nngraphs.sphereicosahedral import SphereIcosahedral
+# from pygsp.graphs.sphereequiangular import SphereEquiangular
 from scipy import sparse
 from scipy.sparse import coo_matrix
 
@@ -79,7 +79,7 @@ def get_icosahedron_laplacians(nodes, depth, laplacian_type):
     for _ in range(depth):
         nodes = icosahedron_nodes_calculator(order)
         order_initial = icosahedron_order_calculator(nodes)
-        G = SphereIcosahedron(level=int(order_initial))
+        G = SphereIcosahedral(level=int(order_initial))
         G.compute_laplacian(laplacian_type)
         laplacian = prepare_laplacian(G.L)
         laps.append(laplacian)
@@ -87,7 +87,7 @@ def get_icosahedron_laplacians(nodes, depth, laplacian_type):
     return laps[::-1]
 
 
-def get_healpix_laplacians(nodes, depth, laplacian_type):
+def get_healpix_laplacians(nodes, depth, laplacian_type): # CEV: nodes = npix
     """Get the healpix laplacian list for a certain depth.
     Args:
         nodes (int): initial number of nodes.
@@ -99,33 +99,34 @@ def get_healpix_laplacians(nodes, depth, laplacian_type):
     laps = []
     for i in range(depth):
         pixel_num = nodes
-        subdivisions = int(healpix_resolution_calculator(pixel_num)/2**i)
-        G = SphereHealpix(subdivisions, nest=True, k=20)
+        subdivisions = int(healpix_resolution_calculator(pixel_num)/2**i) # CEV: = NSIDE/2**i. Each pooling halves NSIDE.
+        # CEV: subdivisions = new NSIDE? 
+        G = SphereHealpix(subdivisions, nest=True, k=20) # CEV: k nearest neighbors from which to build the graph.
         G.compute_laplacian(laplacian_type)
         laplacian = prepare_laplacian(G.L)
         laps.append(laplacian)
     return laps[::-1]
 
 
-def get_equiangular_laplacians(nodes, depth, ratio, laplacian_type):
-    """Get the equiangular laplacian list for a certain depth.
-    Args:
-        nodes (int): initial number of nodes.
-        depth (int): the depth of the UNet.
-        laplacian_type ["combinatorial", "normalized"]: the type of the laplacian.
+# def get_equiangular_laplacians(nodes, depth, ratio, laplacian_type):
+#     """Get the equiangular laplacian list for a certain depth.
+#     Args:
+#         nodes (int): initial number of nodes.
+#         depth (int): the depth of the UNet.
+#         laplacian_type ["combinatorial", "normalized"]: the type of the laplacian.
 
-    Returns:
-        laps (list): increasing list of laplacians
-    """
-    laps = []
-    pixel_num = nodes
-    for _ in range(depth):
-        dim1, dim2 = equiangular_dimension_unpack(pixel_num, ratio)
-        bw1 = equiangular_bandwidth(dim1)
-        bw2 = equiangular_bandwidth(dim2)
-        bw = [bw1, bw2]
-        G = SphereEquiangular(bandwidth=bw, sampling="SOFT")
-        G.compute_laplacian(laplacian_type)
-        laplacian = prepare_laplacian(G.L)
-        laps.append(laplacian)
-    return laps[::-1]
+#     Returns:
+#         laps (list): increasing list of laplacians
+#     """
+#     laps = []
+#     pixel_num = nodes
+#     for _ in range(depth):
+#         dim1, dim2 = equiangular_dimension_unpack(pixel_num, ratio)
+#         bw1 = equiangular_bandwidth(dim1)
+#         bw2 = equiangular_bandwidth(dim2)
+#         bw = [bw1, bw2]
+#         G = SphereEquiangular(bandwidth=bw, sampling="SOFT")
+#         G.compute_laplacian(laplacian_type)
+#         laplacian = prepare_laplacian(G.L)
+#         laps.append(laplacian)
+#     return laps[::-1]

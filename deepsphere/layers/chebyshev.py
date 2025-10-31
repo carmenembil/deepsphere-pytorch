@@ -19,6 +19,7 @@ def cheb_conv(laplacian, inputs, weight):
     Returns:
         :obj:`torch.Tensor`: Inputs after applying Chebyshev convolution.
     """
+    
     B, V, Fin = inputs.shape
     K, Fin, Fout = weight.shape
     # B = batch size
