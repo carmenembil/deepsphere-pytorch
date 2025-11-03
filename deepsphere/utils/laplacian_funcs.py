@@ -100,8 +100,8 @@ def get_healpix_laplacians(nodes, depth, laplacian_type): # CEV: nodes = npix
     for i in range(depth):
         pixel_num = nodes
         subdivisions = int(healpix_resolution_calculator(pixel_num)/2**i) # CEV: = NSIDE/2**i. Each pooling halves NSIDE.
-        # CEV: subdivisions = new NSIDE? 
-        G = SphereHealpix(subdivisions, nest=True, k=20) # CEV: k nearest neighbors from which to build the graph.
+        # CEV: subdivisions = new NSIDE
+        G = SphereHealpix(subdivisions, nest=True, k=8) # CEV: k nearest neighbors from which to build the graph.
         G.compute_laplacian(laplacian_type)
         laplacian = prepare_laplacian(G.L)
         laps.append(laplacian)

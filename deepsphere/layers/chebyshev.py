@@ -124,7 +124,7 @@ class SphericalChebConv(nn.Module):
         """
         super().__init__()
         self.register_buffer("laplacian", lap)
-        self.chebconv = ChebConv(in_channels, out_channels, kernel_size)
+        self.chebconv = ChebConv(in_channels, out_channels, kernel_size,bias=True)
 
     def state_dict(self, *args, **kwargs):
         """! WARNING !

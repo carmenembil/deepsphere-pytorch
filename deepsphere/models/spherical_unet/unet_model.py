@@ -35,7 +35,7 @@ class SphericalUNet(nn.Module):
             self.pooling_class = Icosahedron()
             self.laps = get_icosahedron_laplacians(N, depth, laplacian_type)
         elif pooling_class == "healpix":
-            self.pooling_class = Healpix()
+            self.pooling_class = Healpix(mode="average")
             self.laps = get_healpix_laplacians(N, depth, laplacian_type)
         # elif pooling_class == "equiangular":
         #     self.pooling_class = Equiangular()
@@ -58,6 +58,55 @@ class SphericalUNet(nn.Module):
         x_encoder = self.encoder(x)
         output = self.decoder(*x_encoder)
         return output
+    
+
+# CEV: we only need the encoder for compression tasks.
+# Depth needs to match how many times you'll do the compression and you'll have to make it match by hand with the pooling inside encoder. 
+class SphericalCompression(nn.Module):
+    """Spherical GCNN for compressing from map to parameters.
+    """
+
+    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, ratio=1):
+        """Initialization.
+
+        Args:
+            pooling_class (obj): One of three classes of pooling methods
+            N (int): Number of pixels in the input image
+            depth (int): The depth of the UNet, which is bounded by the N and the type of pooling
+            kernel_size (int): chebychev polynomial degree
+            ratio (float): Parameter for equiangular sampling
+
+        Returns:
+            :obj:`torch.Tensor`: output of shape [B x Npix_compressed x 512]
+        """
+        super().__init__()
+        self.ratio = ratio # CEV: for equilangular only
+        self.kernel_size = kernel_size
+        if pooling_class == "icosahedron":
+            self.pooling_class = Icosahedron()
+            self.laps = get_icosahedron_laplacians(N, depth, laplacian_type)
+        elif pooling_class == "healpix":
+            self.pooling_class = Healpix(mode="average")
+            self.laps = get_healpix_laplacians(N, depth, laplacian_type)
+        # elif pooling_class == "equiangular":
+        #     self.pooling_class = Equiangular()
+        #     self.laps = get_equiangular_laplacians(N, depth, self.ratio, laplacian_type)
+        else:
+            raise ValueError("Error: sampling method unknown. Please use icosahedron or healpix.")
+
+        self.encoder = Encoder(self.pooling_class.pooling, self.laps, self.kernel_size)
+
+    def forward(self, x):
+        """Forward Pass.
+
+        Args:
+            x (:obj:`torch.Tensor`): input to be forwarded.
+
+        Returns:
+            :obj:`torch.Tensor`: output
+        """
+        x_encoder = self.encoder(x) # CEV: currently returns [B x Npix x 512]
+        return x_encoder
 
 
 class SphericalUNetTemporalLSTM(SphericalUNet):

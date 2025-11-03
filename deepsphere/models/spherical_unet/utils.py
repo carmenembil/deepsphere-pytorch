@@ -22,7 +22,8 @@ class SphericalChebBN(nn.Module):
         """
         super().__init__()
         self.spherical_cheb = SphericalChebConv(in_channels, out_channels, lap, kernel_size)
-        self.batchnorm = nn.BatchNorm1d(out_channels)
+        # self.batchnorm = nn.BatchNorm1d(out_channels)
+        self.norm = nn.LayerNorm(out_channels)
 
     def forward(self, x):
         """Forward Pass.
@@ -34,8 +35,10 @@ class SphericalChebBN(nn.Module):
             :obj:`torch.tensor`: output [batch x vertices x channels/features]
         """
         x = self.spherical_cheb(x)
-        x = self.batchnorm(x.permute(0, 2, 1))
-        x = F.relu(x.permute(0, 2, 1))
+        # x = self.batchnorm(x.permute(0, 2, 1)) # CEV: Batch norm expects [B x C x V]
+        # x = F.relu(x.permute(0, 2, 1))
+        # x = self.norm(x)
+        x = F.relu(x)
         return x
 
 
