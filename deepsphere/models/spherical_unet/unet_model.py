@@ -66,7 +66,7 @@ class SphericalCompression(nn.Module):
     """Spherical GCNN for compressing from map to parameters.
     """
 
-    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, ratio=1):
+    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, k_NN=8, ratio=1):
         """Initialization.
 
         Args:
@@ -74,6 +74,7 @@ class SphericalCompression(nn.Module):
             N (int): Number of pixels in the input image
             depth (int): The depth of the UNet, which is bounded by the N and the type of pooling
             kernel_size (int): chebychev polynomial degree
+            k_NN (int): number of nearest neighbors for healpix graph construction
             ratio (float): Parameter for equiangular sampling
 
         Returns:
@@ -87,12 +88,12 @@ class SphericalCompression(nn.Module):
             self.laps = get_icosahedron_laplacians(N, depth, laplacian_type)
         elif pooling_class == "healpix":
             self.pooling_class = Healpix(mode="average")
-            self.laps = get_healpix_laplacians(N, depth, laplacian_type)
+            self.laps = get_healpix_laplacians(N, depth, laplacian_type,k_NN)
         # elif pooling_class == "equiangular":
         #     self.pooling_class = Equiangular()
         #     self.laps = get_equiangular_laplacians(N, depth, self.ratio, laplacian_type)
         else:
-            raise ValueError("Error: sampling method unknown. Please use icosahedron or healpix.")
+            raise ValueError("Error: sampling method unknown. Please use icosahedron or healpix. Equiangular is not supported anymore.")
 
         self.encoder = Encoder(self.pooling_class.pooling, self.laps, self.kernel_size)
 

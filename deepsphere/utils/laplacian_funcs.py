@@ -87,7 +87,7 @@ def get_icosahedron_laplacians(nodes, depth, laplacian_type):
     return laps[::-1]
 
 
-def get_healpix_laplacians(nodes, depth, laplacian_type): # CEV: nodes = npix
+def get_healpix_laplacians(nodes, depth, laplacian_type,k_NN=8): # CEV: nodes = npix
     """Get the healpix laplacian list for a certain depth.
     Args:
         nodes (int): initial number of nodes.
@@ -101,7 +101,7 @@ def get_healpix_laplacians(nodes, depth, laplacian_type): # CEV: nodes = npix
         pixel_num = nodes
         subdivisions = int(healpix_resolution_calculator(pixel_num)/2**i) # CEV: = NSIDE/2**i. Each pooling halves NSIDE.
         # CEV: subdivisions = new NSIDE
-        G = SphereHealpix(subdivisions, nest=True, k=8) # CEV: k nearest neighbors from which to build the graph.
+        G = SphereHealpix(subdivisions, nest=True, k=k_NN) # CEV: k nearest neighbors from which to build the graph.
         G.compute_laplacian(laplacian_type)
         laplacian = prepare_laplacian(G.L)
         laps.append(laplacian)

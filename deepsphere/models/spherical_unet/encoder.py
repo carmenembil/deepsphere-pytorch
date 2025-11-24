@@ -97,16 +97,6 @@ class Encoder(nn.Module):
         self.enc_l0 = SphericalChebPool(512, 512, laps[0], self.pooling, self.kernel_size)
 
 
-        # This worked for counting pixels at nside=16
-        # self.pooling = pooling
-        # self.kernel_size = kernel_size
-        # self.enc_l5 = SphericalChebBN(1, 16, laps[2], self.kernel_size) # Convolves and expands channels with no pooling.
-        # self.enc_l4 = SphericalChebBNPool(16, 32, laps[1], self.pooling, self.kernel_size) # CEV: pools first and convolces + expands channels later.
-        # self.enc_l3 = SphericalChebBNPool(32, 64, laps[0], self.pooling, self.kernel_size)
-        # self.enc_l2 = SphericalChebBNPool(128, 256, laps[0], self.pooling, self.kernel_size)
-        # self.enc_l1 = SphericalChebBNPool(512, 512, laps[1], self.pooling, self.kernel_size)
-        # self.enc_l0 = SphericalChebPool(512, 512, laps[0], self.pooling, self.kernel_size)
-
     def forward(self, x):
         """Forward Pass.
 
