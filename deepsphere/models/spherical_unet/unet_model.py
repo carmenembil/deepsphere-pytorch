@@ -66,7 +66,7 @@ class SphericalCompression(nn.Module):
     """Spherical GCNN for compressing from map to parameters.
     """
 
-    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, k_NN=8, ratio=1):
+    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, k_NN=8, ratio=1,big_index=None,nside_target=None):
         """Initialization.
 
         Args:
@@ -76,6 +76,8 @@ class SphericalCompression(nn.Module):
             kernel_size (int): chebychev polynomial degree
             k_NN (int): number of nearest neighbors for healpix graph construction
             ratio (float): Parameter for equiangular sampling
+            big_index (int or None): Optional big pixel index for healpix graph construction
+            nside_target (int or None): Optional target NSIDE for healpix graph construction
 
         Returns:
             :obj:`torch.Tensor`: output of shape [B x Npix_compressed x 512]
@@ -88,7 +90,7 @@ class SphericalCompression(nn.Module):
             self.laps = get_icosahedron_laplacians(N, depth, laplacian_type)
         elif pooling_class == "healpix":
             self.pooling_class = Healpix(mode="average")
-            self.laps = get_healpix_laplacians(N, depth, laplacian_type,k_NN)
+            self.laps = get_healpix_laplacians(N, depth, laplacian_type,k_NN,big_index=big_index,nside_target=nside_target)
         # elif pooling_class == "equiangular":
         #     self.pooling_class = Equiangular()
         #     self.laps = get_equiangular_laplacians(N, depth, self.ratio, laplacian_type)

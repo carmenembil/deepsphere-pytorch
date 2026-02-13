@@ -87,7 +87,20 @@ def get_icosahedron_laplacians(nodes, depth, laplacian_type):
     return laps[::-1]
 
 
-def get_healpix_laplacians(nodes, depth, laplacian_type,k_NN=8): # CEV: nodes = npix
+def subpixels_in_nest(pixel_big: int, NSIDE_1: int, NSIDE_2: int) -> np.ndarray:
+    """
+    Return the RING pixel indices at NSIDE_2 contained in the RING pixel 'pixel_big' at NSIDE_1.
+    """
+    if NSIDE_2 <= NSIDE_1:
+        raise ValueError("NSIDE_2 must be > NSIDE_1")
+    
+    ratio = NSIDE_2 // NSIDE_1
+    nsub = ratio * ratio
+    start = pixel_big * nsub
+    return np.arange(start, start + nsub, dtype=np.int64)
+
+
+def get_healpix_laplacians(nodes, depth, laplacian_type,k_NN=8,big_index=None,nside_target = None): # CEV: nodes = npix
     """Get the healpix laplacian list for a certain depth.
     Args:
         nodes (int): initial number of nodes.
@@ -97,11 +110,15 @@ def get_healpix_laplacians(nodes, depth, laplacian_type,k_NN=8): # CEV: nodes = 
         laps (list): increasing list of laplacians.
     """
     laps = []
+
     for i in range(depth):
         pixel_num = nodes
         subdivisions = int(healpix_resolution_calculator(pixel_num)/2**i) # CEV: = NSIDE/2**i. Each pooling halves NSIDE.
         # CEV: subdivisions = new NSIDE
-        G = SphereHealpix(subdivisions, nest=True, k=k_NN) # CEV: k nearest neighbors from which to build the graph.
+        indexes = subpixels_in_nest(big_index, nside_target, subdivisions)
+        print("subdivisions:", subdivisions)
+        print("len indexes:", len(indexes))
+        G = SphereHealpix(subdivisions, nest=True, k=k_NN,indexes=indexes) # CEV: k nearest neighbors from which to build the graph. CEV: indices with which to build the graph can be selected.
         G.compute_laplacian(laplacian_type)
         laplacian = prepare_laplacian(G.L)
         laps.append(laplacian)
