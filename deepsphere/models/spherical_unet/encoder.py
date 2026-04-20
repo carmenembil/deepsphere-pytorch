@@ -86,13 +86,14 @@ class Encoder(nn.Module):
             laps (list): List of laplacians.
             kernel_size (int): polynomial degree.
         """
+        # CEV: TODO: make this automatic
         super().__init__()
         self.pooling = pooling
         self.kernel_size = kernel_size
-        self.enc_l5 = SphericalChebBN2(1, 32, 64, laps[2], self.kernel_size) # Convolves and expands channels with no pooling.
-        self.enc_l4 = SphericalChebBNPool(64, 128, laps[1], self.pooling, self.kernel_size) # CEV: pools first and convolves + expands channels later.
-        self.enc_l3 = SphericalChebBNPool(128, 256, laps[0], self.pooling, self.kernel_size)
-        # self.enc_l2 = SphericalChebBNPool(256, 512, laps[0], self.pooling, self.kernel_size)
+        self.enc_l5 = SphericalChebBN2(1, 32, 64, laps[3], self.kernel_size) # Convolves and expands channels with no pooling.
+        self.enc_l4 = SphericalChebBNPool(64, 128, laps[2], self.pooling, self.kernel_size) # CEV: pools first and convolves + expands channels later.
+        self.enc_l3 = SphericalChebBNPool(128, 256, laps[1], self.pooling, self.kernel_size)
+        self.enc_l2 = SphericalChebBNPool(256, 512, laps[0], self.pooling, self.kernel_size)
         # self.enc_l1 = SphericalChebBNPool(512, 512, laps[1], self.pooling, self.kernel_size)
         # self.enc_l0 = SphericalChebPool(512, 512, laps[0], self.pooling, self.kernel_size)
 
@@ -110,11 +111,11 @@ class Encoder(nn.Module):
         x_enc5 = self.enc_l5(x)
         x_enc4 = self.enc_l4(x_enc5)
         x_enc3 = self.enc_l3(x_enc4)
-        # x_enc2 = self.enc_l2(x_enc3)
+        x_enc2 = self.enc_l2(x_enc3)
         # x_enc1 = self.enc_l1(x_enc2)
         # x_enc0 = self.enc_l0(x_enc1) # CEV: now ends at [B x Npix x 512]
 
-        return x_enc3 # CEV: for compression i only need the last layer. (x_enc1, x_enc2, x_enc3, x_enc4)
+        return x_enc2 # CEV: for compression i only need the last layer. (x_enc1, x_enc2, x_enc3, x_enc4)
 
 class EncoderTemporalConv(Encoder):
     """Encoder for the Spherical UNet temporality with convolution.

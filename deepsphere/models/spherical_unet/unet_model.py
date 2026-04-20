@@ -62,6 +62,7 @@ class SphericalUNet(nn.Module):
 
 # CEV: we only need the encoder for compression tasks.
 # Depth needs to match how many times you'll do the compression and you'll have to make it match by hand with the pooling inside encoder. 
+# CEV: maps need to be in nest
 class SphericalCompression(nn.Module):
     """Spherical GCNN for compressing from map to parameters.
     """
