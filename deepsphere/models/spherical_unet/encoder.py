@@ -78,7 +78,7 @@ class Encoder(nn.Module):
     """Encoder for the Spherical UNet.
     """
 
-    def __init__(self, pooling, laps, kernel_size):
+    def __init__(self, pooling, laps, kernel_size,i_channels=1):
         """Initialization.
 
         Args:
@@ -90,7 +90,7 @@ class Encoder(nn.Module):
         super().__init__()
         self.pooling = pooling
         self.kernel_size = kernel_size
-        self.enc_l5 = SphericalChebBN2(1, 32, 64, laps[3], self.kernel_size) # Convolves and expands channels with no pooling.
+        self.enc_l5 = SphericalChebBN2(i_channels, 32, 64, laps[3], self.kernel_size) # Convolves and expands channels with no pooling.
         self.enc_l4 = SphericalChebBNPool(64, 128, laps[2], self.pooling, self.kernel_size) # CEV: pools first and convolves + expands channels later.
         self.enc_l3 = SphericalChebBNPool(128, 256, laps[1], self.pooling, self.kernel_size)
         self.enc_l2 = SphericalChebBNPool(256, 512, laps[0], self.pooling, self.kernel_size)
@@ -116,6 +116,51 @@ class Encoder(nn.Module):
         # x_enc0 = self.enc_l0(x_enc1) # CEV: now ends at [B x Npix x 512]
 
         return x_enc2 # CEV: for compression i only need the last layer. (x_enc1, x_enc2, x_enc3, x_enc4)
+
+
+class Encoder_patches(nn.Module):
+    """Encoder for the Spherical UNet.
+    """
+
+    def __init__(self, pooling, laps, kernel_size,i_channels=1):
+        """Initialization.
+
+        Args:
+            pooling (:obj:`torch.nn.Module`): pooling layer.
+            laps (list): List of laplacians.
+            kernel_size (int): polynomial degree.
+        """
+        # CEV: TODO: make this automatic
+        super().__init__()
+        self.pooling = pooling
+        self.kernel_size = kernel_size
+        self.enc_l5 = SphericalChebBN2(i_channels, 32, 64, laps[3], self.kernel_size) # Convolves and expands channels with no pooling.
+        self.enc_l4 = SphericalChebBNPool(64, 128, laps[2], self.pooling, self.kernel_size) # CEV: pools first and convolves + expands channels later.
+        self.enc_l3 = SphericalChebBNPool(128, 256, laps[1], self.pooling, self.kernel_size)
+        self.enc_l2 = SphericalChebBNPool(256, 512, laps[0], self.pooling, self.kernel_size)
+        self.enc_l1 = SphericalChebBN2(512, 512, 256, laps[0], self.kernel_size) # Convolves and reduces channels with no pooling.
+        self.enc_l0 = SphericalChebBN2(256, 128, 64, laps[0], self.kernel_size) # Convolves and reduces channels with no pooling.
+
+
+    def forward(self, x):
+        """Forward Pass.
+
+        Args:
+            x (:obj:`torch.Tensor`): input [batch x vertices x channels/features]
+
+        Returns:
+            x_enc* :obj: `torch.Tensor`: output [batch x vertices x channels/features]
+        """
+        # CEV: all of these have size [B x V x C]
+        x_enc5 = self.enc_l5(x)
+        x_enc4 = self.enc_l4(x_enc5)
+        x_enc3 = self.enc_l3(x_enc4)
+        x_enc2 = self.enc_l2(x_enc3)
+        x_enc1 = self.enc_l1(x_enc2)
+        x_enc0 = self.enc_l0(x_enc1) # CEV: now ends at [B x Npix x 64]
+
+        return x_enc0 # CEV: for compression i only need the last layer. (x_enc1, x_enc2, x_enc3, x_enc4)
+
 
 class EncoderTemporalConv(Encoder):
     """Encoder for the Spherical UNet temporality with convolution.

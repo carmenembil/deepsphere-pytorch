@@ -10,7 +10,7 @@ from deepsphere.layers.samplings.equiangular_pool_unpool import Equiangular
 from deepsphere.layers.samplings.healpix_pool_unpool import Healpix
 from deepsphere.layers.samplings.icosahedron_pool_unpool import Icosahedron
 from deepsphere.models.spherical_unet.decoder import Decoder
-from deepsphere.models.spherical_unet.encoder import Encoder, EncoderTemporalConv
+from deepsphere.models.spherical_unet.encoder import Encoder, EncoderTemporalConv, Encoder_patches
 from deepsphere.utils.laplacian_funcs import get_healpix_laplacians, get_icosahedron_laplacians #, get_equiangular_laplacians
 
 
@@ -67,18 +67,19 @@ class SphericalCompression(nn.Module):
     """Spherical GCNN for compressing from map to parameters.
     """
 
-    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, k_NN=8, ratio=1,big_index=None,nside_target=None):
+    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, 
+                 k_NN=8, ratio=1,big_index=None,nside_target=None,i_channels = 1):
         """Initialization.
 
         Args:
             pooling_class (obj): One of three classes of pooling methods
-            N (int): Number of pixels in the input image
+            N (int): Number of pixels in the input image. Only used to compute starting nside.
             depth (int): The depth of the UNet, which is bounded by the N and the type of pooling
             kernel_size (int): chebychev polynomial degree
             k_NN (int): number of nearest neighbors for healpix graph construction
             ratio (float): Parameter for equiangular sampling
             big_index (int or None): Optional big pixel index for healpix graph construction
-            nside_target (int or None): Optional target NSIDE for healpix graph construction
+            nside_target (int or None): [Optional] target NSIDE for healpix graph construction
 
         Returns:
             :obj:`torch.Tensor`: output of shape [B x Npix_compressed x 512]
@@ -86,6 +87,7 @@ class SphericalCompression(nn.Module):
         super().__init__()
         self.ratio = ratio # CEV: for equilangular only
         self.kernel_size = kernel_size
+        self.i_channels = int(i_channels)
         if pooling_class == "icosahedron":
             self.pooling_class = Icosahedron()
             self.laps = get_icosahedron_laplacians(N, depth, laplacian_type)
@@ -98,7 +100,59 @@ class SphericalCompression(nn.Module):
         else:
             raise ValueError("Error: sampling method unknown. Please use icosahedron or healpix. Equiangular is not supported anymore.")
 
-        self.encoder = Encoder(self.pooling_class.pooling, self.laps, self.kernel_size)
+        self.encoder = Encoder(self.pooling_class.pooling, self.laps, self.kernel_size, i_channels = self.i_channels)
+
+    def forward(self, x):
+        """Forward Pass.
+
+        Args:
+            x (:obj:`torch.Tensor`): input to be forwarded.
+
+        Returns:
+            :obj:`torch.Tensor`: output
+        """
+        x_encoder = self.encoder(x) # CEV: currently returns [B x Npix x 512]
+        return x_encoder
+
+
+class SphericalCompression_Patches(nn.Module):
+    """Spherical GCNN for compressing from map to parameters.
+    """
+
+    def __init__(self, pooling_class, N, depth, laplacian_type, kernel_size, 
+                 k_NN=8, ratio=1,big_index=None,nside_target=None,i_channels = 1):
+        """Initialization.
+
+        Args:
+            pooling_class (obj): One of three classes of pooling methods
+            N (int): Number of pixels in the input image. Only used to compute starting nside.
+            depth (int): The depth of the UNet, which is bounded by the N and the type of pooling
+            kernel_size (int): chebychev polynomial degree
+            k_NN (int): number of nearest neighbors for healpix graph construction
+            ratio (float): Parameter for equiangular sampling
+            big_index (int or None): Optional big pixel index for healpix graph construction
+            nside_target (int or None): [Optional] target NSIDE for healpix graph construction
+
+        Returns:
+            :obj:`torch.Tensor`: output of shape [B x Npix_compressed x 512]
+        """
+        super().__init__()
+        self.ratio = ratio # CEV: for equilangular only
+        self.kernel_size = kernel_size
+        self.i_channels = int(i_channels)
+        if pooling_class == "icosahedron":
+            self.pooling_class = Icosahedron()
+            self.laps = get_icosahedron_laplacians(N, depth, laplacian_type)
+        elif pooling_class == "healpix":
+            self.pooling_class = Healpix(mode="average")
+            self.laps = get_healpix_laplacians(N, depth, laplacian_type,k_NN,big_index=big_index,nside_target=nside_target)
+        # elif pooling_class == "equiangular":
+        #     self.pooling_class = Equiangular()
+        #     self.laps = get_equiangular_laplacians(N, depth, self.ratio, laplacian_type)
+        else:
+            raise ValueError("Error: sampling method unknown. Please use icosahedron or healpix. Equiangular is not supported anymore.")
+
+        self.encoder = Encoder_patches(self.pooling_class.pooling, self.laps, self.kernel_size, i_channels = self.i_channels)
 
     def forward(self, x):
         """Forward Pass.
